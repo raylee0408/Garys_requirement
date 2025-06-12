@@ -14,7 +14,7 @@ NZBN_ENTITY_URL = 'https://api.business.govt.nz/gateway/nzbn/v5/entities/{}'  # 
 HTML_FORM = """
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head>a
     <meta charset="UTF-8">
     <title>NZ Company Director Finder</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
