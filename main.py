@@ -1,9 +1,13 @@
+import os
+
 from flask import Flask, request, render_template_string, jsonify
+from dotenv import load_dotenv
 import requests
 
 app = Flask(__name__)
+load_dotenv()
 
-API_KEY = '64cca8f1368944f58b4d71befe4f81cc'  # Replace with your actual API key
+API_KEY = os.getenv('API_KEY')
 NZBN_SEARCH_URL = 'https://api.business.govt.nz/gateway/nzbn/v5/entities'
 NZBN_ENTITY_URL = 'https://api.business.govt.nz/gateway/nzbn/v5/entities/{}'  # {} will be replaced by NZBN
 
@@ -81,6 +85,15 @@ HTML_FORM = """
                 {% else %}
                     <div class="alert alert-warning mt-3">No directors found for this company.</div>
                 {% endif %}
+                {% if company_number %}
+                    <div class="mt-3">
+                        <a href="https://app.companiesoffice.govt.nz/companies/app/ui/pages/companies/{{ company_number }}/directors"
+                           target="_blank" class="btn btn-link p-0" style="font-size:1em;">
+                            View source on Companies Register
+                        </a>
+                    </div>
+                {% endif %}
+
 
             </div>
         </div>
@@ -156,6 +169,7 @@ def autocomplete():
 def index():
     directors = None
     company_display_name = None
+    company_number = None
     error = None
     if request.method == 'POST':
         company_name = request.form['company_name'].strip()
@@ -187,6 +201,7 @@ def index():
                     entity_resp = requests.get(NZBN_ENTITY_URL.format(nzbn), headers=headers, timeout=10)
                     if entity_resp.ok:
                         entity_data = entity_resp.json()
+                        company_number = entity_data.get('sourceRegisterUniqueIdentifier', None)
                         directors = []
                         roles = entity_data.get('roles', [])
                         for role in roles:
@@ -208,7 +223,10 @@ def index():
                 error = f"API error: {resp.status_code} {resp.reason}"
         except Exception as e:
             error = f"Request failed: {e}"
-    return render_template_string(HTML_FORM, directors=directors, error=error, company_display_name=company_display_name)
+    return render_template_string(HTML_FORM, directors=directors, error=error,
+                                  company_display_name=company_display_name,
+                                  company_number=company_number
+                                  )
 
 if __name__ == '__main__':
     app.run(debug=True)
