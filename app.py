@@ -45,7 +45,7 @@ def get_directors_for_nzbn(nzbn):
                     name_parts = [person.get('firstName', ''), person.get('lastName', '')]
                     full_name = ' '.join(filter(None, name_parts))
                     if full_name.strip():
-                        directors.append(full_name)
+                        directors.append(full_name.title())
             return ", ".join(directors)
     except Exception as e:
         st.error(f"Error fetching directors for NZBN {nzbn}: {e}")
