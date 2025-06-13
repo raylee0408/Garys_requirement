@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import os
+import re
 from dotenv import load_dotenv
 
 # Load API key from .env file
@@ -9,6 +10,18 @@ load_dotenv()
 API_KEY = os.getenv('API_KEY')
 NZBN_SEARCH_URL = 'https://api.business.govt.nz/gateway/nzbn/v5/entities'
 NZBN_ENTITY_URL = 'https://api.business.govt.nz/gateway/nzbn/v5/entities/{}'
+
+def extract_company_name(cell_value):
+    if not isinstance(cell_value, str):
+        return ""
+    # Split by comma, check each part for ending with "Limited"
+    for part in reversed(cell_value.split(',')):
+        part = part.strip()
+        if re.search(r'Limited$', part, re.IGNORECASE):
+            return part
+    return cell_value.strip()
+
+
 
 def get_nzbn_for_company(company_name):
     headers = {
@@ -65,10 +78,12 @@ if uploaded_file is not None:
         if st.button("Process Companies"):
             results = []
             for idx, row in df.iterrows():
-                company_name = str(row['Name on the title']).strip()
+                raw_name = str(row['Name on the title']).strip()
+                company_name = extract_company_name(raw_name)
                 if not company_name:
                     results.append({
-                        "Company Name": "",
+                        "Original": raw_name,
+                        "Extracted Company Name": "",
                         "NZBN": "",
                         "Matched Name": "",
                         "Directors": ""
@@ -78,7 +93,8 @@ if uploaded_file is not None:
                 nzbn, matched_name = get_nzbn_for_company(company_name)
                 directors = get_directors_for_nzbn(nzbn) if nzbn else ""
                 results.append({
-                    "Company Name": company_name,
+                    "Original": raw_name,
+                    "Extracted Company Name": company_name,
                     "NZBN": nzbn,
                     "Matched Name": matched_name,
                     "Directors": directors
