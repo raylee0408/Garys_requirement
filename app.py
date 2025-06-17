@@ -84,14 +84,16 @@ if uploaded_file is not None:
             results = []
             for idx, row in df.iterrows():
                 raw_name = str(row['Owners Name(s)']).strip()
+                unit_value = row.get('Unit', '')
                 result_string = format_directors_with_original_order(raw_name, get_nzbn_for_company,
                                                                      get_directors_for_nzbn)
                 results.append({
+                    "Unit": unit_value,
                     "Original": raw_name,
                     "Directors": result_string})
 
             results_df = pd.DataFrame(results)
-            results_df = results_df[['Original', 'Directors']]
+            results_df = results_df[['Unit', 'Original', 'Directors']]
 
             st.write("Results:", results_df)
 
