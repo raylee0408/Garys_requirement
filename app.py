@@ -71,19 +71,19 @@ def get_directors_for_nzbn(nzbn):
 
 st.title("Batch NZ Company Directors Lookup")
 
-uploaded_file = st.file_uploader("Upload Excel file with a 'Name on the title' column", type=['xlsx', 'xls'])
+uploaded_file = st.file_uploader("Upload Excel file with a 'Owners Name(s)' column", type=['xlsx', 'xls'])
 
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
     st.write("Uploaded data preview:", df.head())
 
-    if 'Name on the title' not in df.columns:
-        st.error("No 'Name on the title' column found in the uploaded file.")
+    if 'Owners Name(s)' not in df.columns:
+        st.error("No 'Owners Name(s)' column found in the uploaded file.")
     else:
         if st.button("Process Companies"):
             results = []
             for idx, row in df.iterrows():
-                raw_name = str(row['Name on the title']).strip()
+                raw_name = str(row['Owners Name(s)']).strip()
                 result_string = format_directors_with_original_order(raw_name, get_nzbn_for_company,
                                                                      get_directors_for_nzbn)
                 results.append({
