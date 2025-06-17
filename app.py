@@ -11,15 +11,20 @@ API_KEY = os.getenv('API_KEY')
 NZBN_SEARCH_URL = 'https://api.business.govt.nz/gateway/nzbn/v5/entities'
 NZBN_ENTITY_URL = 'https://api.business.govt.nz/gateway/nzbn/v5/entities/{}'
 
-def extract_company_name(cell_value):
-    if not isinstance(cell_value, str):
-        return ""
-    # Split by comma, check each part for ending with "Limited"
-    for part in reversed(cell_value.split(',')):
-        part = part.strip()
-        if re.search(r'Limited$', part, re.IGNORECASE):
-            return part
-    return cell_value.strip()
+def format_directors_with_original_order(cell_value, get_nzbn_for_company, get_directors_for_nzbn):
+    parts = [p.strip() for p in cell_value.split(',')]
+    result_parts = []
+    limited_companies = {p for p in parts if re.search(r'Limited', p, re.IGNORECASE)}
+
+    for part in parts:
+        if part in limited_companies:
+            nzbn, _ = get_nzbn_for_company(part)
+            directors = get_directors_for_nzbn(nzbn) if nzbn else "Not found"
+            result_parts.append(f"{part} - Director: {directors}")
+        else:
+            result_parts.append(part)
+    return ", ".join(result_parts)
+
 
 
 
@@ -79,29 +84,15 @@ if uploaded_file is not None:
             results = []
             for idx, row in df.iterrows():
                 raw_name = str(row['Name on the title']).strip()
-                company_name = extract_company_name(raw_name)
-                if not company_name:
-                    results.append({
-                        "Original": raw_name,
-                        "Extracted Company Name": "",
-                        "NZBN": "",
-                        "Matched Name": "",
-                        "Directors": ""
-                    })
-                    continue
-
-                nzbn, matched_name = get_nzbn_for_company(company_name)
-                directors = get_directors_for_nzbn(nzbn) if nzbn else ""
+                result_string = format_directors_with_original_order(raw_name, get_nzbn_for_company,
+                                                                     get_directors_for_nzbn)
                 results.append({
                     "Original": raw_name,
-                    "Extracted Company Name": company_name,
-                    "NZBN": nzbn,
-                    "Matched Name": matched_name,
-                    "Directors": directors
-                })
-                st.write(f"Processed: {company_name} → {matched_name or 'Not found'}")
+                    "Directors": result_string})
 
             results_df = pd.DataFrame(results)
+            results_df = results_df[['Original', 'Directors']]
+
             st.write("Results:", results_df)
 
             csv = results_df.to_csv(index=False)
