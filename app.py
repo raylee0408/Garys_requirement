@@ -81,28 +81,29 @@ if uploaded_file is not None:
         st.error("No 'Owners Name(s)' column found in the uploaded file.")
     else:
         if st.button("Process Companies"):
-            results = []
-            for idx, row in df.iterrows():
-                raw_name = str(row['Owners Name(s)']).strip()
-                unit_value = row.get('Unit', '')
-                result_string = format_directors_with_original_order(raw_name, get_nzbn_for_company,
-                                                                     get_directors_for_nzbn)
-                results.append({
-                    "Unit": unit_value,
-                    "Original": raw_name,
-                    "Directors": result_string})
+            with st.spinner("Processing companies....."):
+                results = []
+                for idx, row in df.iterrows():
+                    raw_name = str(row['Owners Name(s)']).strip()
+                    unit_value = row.get('Unit', '')
+                    result_string = format_directors_with_original_order(raw_name, get_nzbn_for_company,
+                                                                         get_directors_for_nzbn)
+                    results.append({
+                        "Unit": unit_value,
+                        "Original": raw_name,
+                        "Directors": result_string})
 
-            results_df = pd.DataFrame(results)
-            results_df = results_df[['Unit', 'Original', 'Directors']]
+                results_df = pd.DataFrame(results)
+                results_df = results_df[['Unit', 'Original', 'Directors']]
 
-            st.write("Results:", results_df)
+                st.write("Results:", results_df)
 
-            csv = results_df.to_csv(index=False)
-            st.download_button(
-                label="Download Results as CSV",
-                data=csv,
-                file_name='company_directors_results.csv',
-                mime='text/csv'
-            )
+                csv = results_df.to_csv(index=False)
+                st.download_button(
+                    label="Download Results as CSV",
+                    data=csv,
+                    file_name='company_directors_results.csv',
+                    mime='text/csv'
+                )
 
 st.caption("Powered by NZBN API")
